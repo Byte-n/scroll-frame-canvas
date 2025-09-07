@@ -1053,7 +1053,7 @@ __webpack_require__.r(__webpack_exports__);
 
 // 全局变量
 let scrollFrameCanvas = null;
-let currentFrameRatio = 3;
+let currentFrameRatio = 0;
 let scrollHint = null;
 let hintShown = false;
 // 显示滚动提示
