@@ -49,6 +49,7 @@ class ScrollFrameCanvas extends _events__WEBPACK_IMPORTED_MODULE_0__.EventEmitte
             scaleMode: 'contain',
             resetScrollOnInit: true,
             maxConcurrentLoads: 6,
+            exitAnimationFrameRate: 75,
             onFrame: _utils__WEBPACK_IMPORTED_MODULE_1__.noop,
             onComplete: _utils__WEBPACK_IMPORTED_MODULE_1__.noop,
             onError: _utils__WEBPACK_IMPORTED_MODULE_1__.noop,
@@ -146,6 +147,7 @@ class ScrollFrameCanvas extends _events__WEBPACK_IMPORTED_MODULE_0__.EventEmitte
                 await (0,_utils__WEBPACK_IMPORTED_MODULE_1__.runTasks)(groups[0].map((i) => () => {
                     return this._preloadAndRenderFrame(i, offscreenCanvas, offscreenCtx);
                 }), this.options.maxConcurrentLoads);
+                await this._stopLoadingAnimation();
                 this.totalProgress = this.total;
                 Promise.resolve()
                     .then(async () => {
@@ -175,6 +177,7 @@ class ScrollFrameCanvas extends _events__WEBPACK_IMPORTED_MODULE_0__.EventEmitte
                 }), this.options.maxConcurrentLoads);
                 // 移除 null 元素并更新 total
                 this._cleanupNullFrames();
+                await this._stopLoadingAnimation();
             }
             // 恢复滚动
             this._enableScroll();
@@ -185,10 +188,8 @@ class ScrollFrameCanvas extends _events__WEBPACK_IMPORTED_MODULE_0__.EventEmitte
         catch (error) {
             // 出错时也要停止动画并恢复滚动
             this._enableScroll();
+            await this._stopLoadingAnimation();
             throw error;
-        }
-        finally {
-            this._stopLoadingAnimation();
         }
     }
     /** 开始播放（启用渲染循环） */
@@ -278,7 +279,7 @@ class ScrollFrameCanvas extends _events__WEBPACK_IMPORTED_MODULE_0__.EventEmitte
                 this._preRenderedFrames[index] = null; // 标记为 null
                 if (!isBack) {
                     this.totalProgress--;
-                    this._updateLoadingProgress();
+                    this._updateLoadingProgress(0);
                 }
                 return;
             }
@@ -481,7 +482,7 @@ class ScrollFrameCanvas extends _events__WEBPACK_IMPORTED_MODULE_0__.EventEmitte
         const frameIndex = this.options.frameMapper(scrollPixels, totalScrollPixels, total);
         return (0,_utils__WEBPACK_IMPORTED_MODULE_1__.clamp)(Math.round(frameIndex), 0, total - 1);
     }
-    _renderIfNeeded(force = false, usePrevRealFrame = false) {
+    _renderIfNeeded(force = false, usePrevRealFrame = false, event = true) {
         if (this._destroyed)
             return;
         const frame = this._currentFrame;
@@ -519,9 +520,11 @@ class ScrollFrameCanvas extends _events__WEBPACK_IMPORTED_MODULE_0__.EventEmitte
             this._drawPreRenderedFrame(preRenderedFrame);
             this._lastDrawnFrame = frame;
             this._lastRealDrawFrame = realFrame;
-            const { scrollPixels, totalScrollPixels } = this._getScrollPixels();
-            const offset = totalScrollPixels > 0 ? scrollPixels / totalScrollPixels : 0;
-            this.emit('frame', frame, offset);
+            if (event) {
+                const { scrollPixels, totalScrollPixels } = this._getScrollPixels();
+                const offset = totalScrollPixels > 0 ? scrollPixels / totalScrollPixels : 0;
+                this.emit('frame', frame, offset);
+            }
             if (frame === this.getTotalFrames() - 1) {
                 this.emit('complete');
             }
@@ -549,18 +552,24 @@ class ScrollFrameCanvas extends _events__WEBPACK_IMPORTED_MODULE_0__.EventEmitte
         this._loadingCompleted = false;
     }
     _stopLoadingAnimation() {
+        this._drawLoadingAnimation();
         this._loadingCompleted = true;
         cancelAnimationFrame(this._loadingAnimationId);
         this._loadingAnimationId = 0;
         if (this._destroyed)
-            return;
-        // 清空画布
-        if (this.ctx) {
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        }
+            return Promise.resolve();
+        this._currentFrame = 0;
+        return (0,_utils__WEBPACK_IMPORTED_MODULE_1__.drawExitAnimation)({
+            ctx: this.ctx, canvas: this.canvas,
+            totalFrame: this.options.exitAnimationFrameRate,
+            exitDirection: 'top',
+            drawBackground: () => {
+                this._renderIfNeeded(true, false, false);
+            }
+        });
     }
-    _updateLoadingProgress() {
-        this._loadingProgressCount++;
+    _updateLoadingProgress(incr = 1) {
+        this._loadingProgressCount += incr;
         this._loadingProgress = Math.min(1, Math.max(0, this._loadingProgressCount / this.totalProgress));
         const animate = () => {
             if (this._loadingAnimationId === 0)
@@ -805,6 +814,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   clamp: () => (/* binding */ clamp),
 /* harmony export */   deepMerge: () => (/* binding */ deepMerge),
+/* harmony export */   drawExitAnimation: () => (/* binding */ drawExitAnimation),
+/* harmony export */   easeOutQuad: () => (/* binding */ easeOutQuad),
 /* harmony export */   fitRectContain: () => (/* binding */ fitRectContain),
 /* harmony export */   fitRectCover: () => (/* binding */ fitRectCover),
 /* harmony export */   fitRectFill: () => (/* binding */ fitRectFill),
@@ -942,6 +953,35 @@ function deepMerge(obj, obj2) {
     }
     return result;
 }
+function easeOutQuad(t) {
+    const tt = clamp(t, 0, 1);
+    return 1 - (1 - tt) * (1 - tt);
+}
+function drawExitAnimation(config) {
+    const { ctx, canvas, drawBackground, totalFrame, exitDirection } = config;
+    const ofc = new OffscreenCanvas(canvas.width, canvas.height);
+    const opcCtx = ofc.getContext('2d');
+    opcCtx.drawImage(canvas, 0, 0);
+    return new Promise((resolve) => {
+        let frame = 0;
+        const drawExit = () => {
+            if (frame === totalFrame) {
+                ctx.globalAlpha = 1;
+                return resolve();
+            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.globalAlpha = 1;
+            drawBackground();
+            const t = frame / totalFrame;
+            const eased = easeOutQuad(t);
+            ctx.globalAlpha = 1 - eased;
+            ctx.drawImage(ofc, 0, exitDirection === 'top' ? -canvas.height * eased : canvas.height * eased);
+            frame++;
+            requestAnimationFrame(drawExit);
+        };
+        requestAnimationFrame(drawExit);
+    });
+}
 
 
 /***/ })
@@ -1013,7 +1053,7 @@ __webpack_require__.r(__webpack_exports__);
 
 // 全局变量
 let scrollFrameCanvas = null;
-let currentFrameRatio = 0;
+let currentFrameRatio = 3;
 let scrollHint = null;
 let hintShown = false;
 // 显示滚动提示

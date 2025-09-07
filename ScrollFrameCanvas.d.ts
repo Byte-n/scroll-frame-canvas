@@ -39,6 +39,7 @@ export interface ScrollFrameCanvasOptions {
     frameMapper: (scrollPixels: number, totalScrollPixels: number, totalFrames: number) => number;
     resetScrollOnInit?: boolean;
     maxConcurrentLoads?: number;
+    exitAnimationFrameRate?: number;
 }
 /**
  * 基于滚动条驱动的 Canvas 帧序列渲染器

@@ -26,4 +26,12 @@ export declare function selectFit(mode: 'contain' | 'cover' | 'fill', sw: number
 };
 export declare function runTasks<T>(tasks: Array<() => Promise<T>>, concurrency: number): Promise<Array<T>>;
 export declare function deepMerge<T>(obj: T, obj2: T): T;
+export declare function easeOutQuad(t: number): number;
+export declare function drawExitAnimation(config: {
+    ctx: CanvasRenderingContext2D;
+    canvas: HTMLCanvasElement;
+    drawBackground: () => void;
+    totalFrame: number;
+    exitDirection: 'top' | 'bottom';
+}): Promise<void>;
 //# sourceMappingURL=utils.d.ts.map
