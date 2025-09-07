@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ScrollFrameCanvas Demo</title>
+  <script type="module" src="./demo.esm.js"></script></head>
+  <body>
+    <style>
+      html, body { margin: 0; }
+      body { background: #111; }
+      /* 场景区域，内部的 pin 容器会吸顶直至该区域结束 */
+      #stage { height: 300vh; position: relative; }
+      .pin { position: sticky; top: 0; height: 100vh; }
+      #canvas { width: 100%; height: 100%; display: block; object-fit: cover; }
+      /* 红色容器，滚到这里时 canvas 将随滚动离开视口 */
+      .after { background: #e6e1e1; }
+
+      /* 弹跳动画 */
+      @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% {
+          transform: translateY(0);
+        }
+        40% {
+          transform: translateY(-10px);
+        }
+        60% {
+          transform: translateY(-5px);
+        }
+      }
+    </style>
+
+    <section id="stage">
+      <div class="pin">
+        <canvas id="canvas" width="1920" height="1080"></canvas>
+        <!-- 交互提示 -->
+        <div id="scrollHint" style="position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); color: white; text-align: center; opacity: 0; transition: opacity 0.5s ease-in-out; pointer-events: none; z-index: 10;">
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            <div style="font-size: 16px; font-weight: 500; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+              往下滑动查看动画
+            </div>
+            <div style="animation: bounce 2s infinite;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M7 13l3 3 7-7"/>
+                <path d="M7 6l3 3 7-7"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="after">
+      <div style="max-width: 1200px; margin: 0 auto; padding: 80px 40px; color: #333; font-family: 'Arial', sans-serif; line-height: 1.6;">
+        <h1 style="font-size: 48px; font-weight: 900; margin-bottom: 30px; text-align: center; color: #2a2a2a;">
+          ScrollFrameCanvas
+        </h1>
+
+        <p style="font-size: 20px; text-align: center; margin-bottom: 60px; color: #666;">
+          高性能的滚动驱动帧序列动画库，让你的网页体验更加生动
+        </p>
+
+        <!-- Adaline 介绍部分 -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; border-radius: 16px; margin-bottom: 60px; color: white; text-align: center;">
+          <h2 style="font-size: 32px; font-weight: 700; margin-bottom: 20px; color: white;">
+            🎬 演示素材来源
+          </h2>
+          <p style="font-size: 18px; margin-bottom: 25px; opacity: 0.9;">
+            本演示的动画素材来源于 <a href="https://www.adaline.ai/" target="_blank" style="color: #ffd700; text-decoration: none; font-weight: 600;">Adaline</a>
+          </p>
+          <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 12px; backdrop-filter: blur(10px);">
+            <h3 style="font-size: 24px; margin-bottom: 15px; color: #ffd700;">关于 Adaline</h3>
+            <p style="font-size: 16px; line-height: 1.6; margin-bottom: 20px; opacity: 0.9;">
+              <a href="https://www.adaline.ai/" target="_blank" style="color: #ffd700; text-decoration: none; font-weight: 600;">Adaline</a> 是专为世界级产品和工程团队打造的端到端 LLM 开发平台，提供迭代、评估、部署和监控的完整解决方案。
+            </p>
+            <div style="margin-top: 25px;">
+              <a href="https://www.adaline.ai/" target="_blank" style="background: #ffd700; color: #333; padding: 12px 24px; border-radius: 25px; text-decoration: none; font-weight: 600; display: inline-block; transition: transform 0.2s;">
+                访问 Adaline →
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- 帧数控制面板 -->
+        <div style="background: #f8f9fa; padding: 30px; border-radius: 12px; margin-bottom: 40px; text-align: center;">
+          <h3 style="color: #2a2a2a; margin-bottom: 20px; font-size: 24px;">
+            🎛️ 帧数控制
+          </h3>
+          <div style="display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 16px; color: #333;">
+              <span>帧数比例:</span>
+              <select id="frameRatio" style="padding: 8px 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; background: white;">
+                <option value="0">全量帧 (100%) + 优化</option>
+                <option value="1">全量帧 (100%)</option>
+                <option value="2">1/2 帧 (50%)</option>
+                <option value="4" >1/4 帧 (25%)</option>
+              </select>
+            </label>
+            <button id="rerenderBtn" style="background: #007acc; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s;">
+              重新渲染
+            </button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px; margin-bottom: 60px;">
+          <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+            <h3 style="color: #2a2a2a; margin-bottom: 15px; font-size: 24px;">🚀 高性能渲染</h3>
+            <p style="color: #666; margin: 0;">
+              使用 OffscreenCanvas 预渲染所有帧，运行时直接绘制 ImageBitmap，确保丝滑的滚动体验。
+            </p>
+          </div>
+
+          <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+            <h3 style="color: #2a2a2a; margin-bottom: 15px; font-size: 24px;">⚡ 自定义映射</h3>
+            <p style="color: #666; margin: 0;">
+              通过 frameMapper 函数自定义滚动像素到帧索引的映射关系，完全控制动画节奏。
+            </p>
+          </div>
+
+          <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+            <h3 style="color: #2a2a2a; margin-bottom: 15px; font-size: 24px;">🎨 TypeScript 支持</h3>
+            <p style="color: #666; margin: 0;">
+              完整的 TypeScript 类型定义，提供优秀的开发体验和代码智能提示。
+            </p>
+          </div>
+
+          <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+            <h3 style="color: #2a2a2a; margin-bottom: 15px; font-size: 24px;">🔧 灵活配置</h3>
+            <p style="color: #666; margin: 0;">
+              支持水平/垂直滚动、事件系统、错误处理等丰富的配置选项，满足各种使用场景。
+            </p>
+          </div>
+
+          <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+            <h3 style="color: #2a2a2a; margin-bottom: 15px; font-size: 24px;">💫 加载动画</h3>
+            <p style="color: #666; margin: 0;">
+              内置精美的加载动画，在图片预处理期间为用户提供视觉反馈，提升用户体验。
+            </p>
+          </div>
+
+          <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+            <h3 style="color: #2a2a2a; margin-bottom: 15px; font-size: 24px;">📈 智能分层加载</h3>
+            <p style="color: #666; margin: 0;">
+              独创的 large 参数优化策略，采用分层递进式加载，优先加载关键帧实现快速预览，后台继续加载完整细节帧，大幅提升大型动画的启动速度。
+            </p>
+          </div>
+        </div>
+
+        <div style="background: #f8f9fa; padding: 40px; border-radius: 12px; margin-bottom: 40px;">
+          <h3 style="color: #2a2a2a; margin-bottom: 20px; font-size: 28px; text-align: center;">
+            快速开始
+          </h3>
+          <pre style="background: #2a2a2a; color: #e6e6e6; padding: 25px; border-radius: 8px; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 14px; margin: 0;"><code>import ScrollFrameCanvas from '@byte.n/scroll-frame-canvas';
+
+const player = new ScrollFrameCanvas({
+  total: 100,
+  imageFactory: async (i) => `./frames/frame-${i}.jpg`,
+  canvasEle: document.getElementById('canvas'),
+  scrollbarEle: window,
+  scrollAxis: 'y',
+  frameMapper: (scrollPixels) => Math.round(scrollPixels / 10),
+  onInitComplete: () => console.log('Ready!')
+});
+
+player.init().then(() => player.play());</code></pre>
+        </div>
+
+        <div style="text-align: center;">
+          <h3 style="color: #2a2a2a; margin-bottom: 20px; font-size: 24px;">
+            适用场景
+          </h3>
+          <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 20px;">
+            <span style="background: #007acc; color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px;">产品展示</span>
+            <span style="background: #007acc; color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px;">故事叙述</span>
+            <span style="background: #007acc; color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px;">交互动画</span>
+            <span style="background: #007acc; color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px;">数据可视化</span>
+            <span style="background: #007acc; color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px;">创意展示</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </body>
+  </html>
