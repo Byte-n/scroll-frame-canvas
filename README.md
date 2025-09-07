@@ -4,7 +4,7 @@
 
 </div>
 
-## ScrollFrameCanvas
+## scroll-frame-canvas
 
 一个基于滚动条驱动的 Canvas 帧序列渲染器。支持超大序列的渐进式加载（分层预取）、OffscreenCanvas 预渲染、`contain/cover/fill` 缩放、滚动轴映射、自定义加载动画与事件回调，适用于产品页沉浸式滚动动画、分镜头切换与高分辨率影像浏览。
 
@@ -17,7 +17,7 @@
 - 自定义加载动画：主加载与背景层加载均可自定义绘制
 - 并发控制与重试：`maxConcurrentLoads` 
 
-文档：https://byte-n.github.io/ScrollFrameCanvas/
+文档：https://byte-n.github.io/scroll-frame-canvas/
 
 ---
 
