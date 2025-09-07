@@ -268,6 +268,9 @@ class ScrollFrameCanvas extends _events__WEBPACK_IMPORTED_MODULE_0__.EventEmitte
         }
     }
     async _preloadAndRenderFrame(index, offscreenCanvas, offscreenCtx, isBack = false) {
+        if (this._destroyed) {
+            throw new Error('ScrollFrameCanvas 已销毁');
+        }
         try {
             const image = await this._loadFrame(index);
             // 如果 image 为 null，跳过渲染，但保留数组位置
@@ -347,6 +350,8 @@ class ScrollFrameCanvas extends _events__WEBPACK_IMPORTED_MODULE_0__.EventEmitte
         });
     }
     _drawImageToOffscreen(img, ctx, canvasW, canvasH) {
+        if (this._destroyed)
+            return;
         const natW = img.naturalWidth || img.width || 1;
         const natH = img.naturalHeight || img.height || 1;
         const fit = (0,_utils__WEBPACK_IMPORTED_MODULE_1__.selectFit)(this.options.scaleMode, natW, natH, canvasW, canvasH);
@@ -477,6 +482,8 @@ class ScrollFrameCanvas extends _events__WEBPACK_IMPORTED_MODULE_0__.EventEmitte
         return (0,_utils__WEBPACK_IMPORTED_MODULE_1__.clamp)(Math.round(frameIndex), 0, total - 1);
     }
     _renderIfNeeded(force = false, usePrevRealFrame = false) {
+        if (this._destroyed)
+            return;
         const frame = this._currentFrame;
         if (!force) {
             if (frame === this._lastDrawnFrame) {
@@ -526,6 +533,8 @@ class ScrollFrameCanvas extends _events__WEBPACK_IMPORTED_MODULE_0__.EventEmitte
         }
     }
     _drawPreRenderedFrame(preRenderedFrame) {
+        if (this._destroyed)
+            return;
         if (!this.ctx)
             return;
         const ctx = this.ctx;
@@ -543,6 +552,8 @@ class ScrollFrameCanvas extends _events__WEBPACK_IMPORTED_MODULE_0__.EventEmitte
         this._loadingCompleted = true;
         cancelAnimationFrame(this._loadingAnimationId);
         this._loadingAnimationId = 0;
+        if (this._destroyed)
+            return;
         // 清空画布
         if (this.ctx) {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -561,6 +572,8 @@ class ScrollFrameCanvas extends _events__WEBPACK_IMPORTED_MODULE_0__.EventEmitte
         this._loadingAnimationId = requestAnimationFrame(animate);
     }
     _drawLoadingAnimation() {
+        if (this._destroyed)
+            return;
         if (this._loadingCompleted)
             return;
         if (!this.ctx)
@@ -643,6 +656,8 @@ class ScrollFrameCanvas extends _events__WEBPACK_IMPORTED_MODULE_0__.EventEmitte
         this._backgroundLoadingAnimationId = requestAnimationFrame(animate);
     }
     _drawBackgroundLoadingAnimation() {
+        if (this._destroyed)
+            return;
         if (this._backgroundLoadingCompleted || !this.ctx)
             return;
         if (!this.options.large?.showBackgroundProgress)
@@ -757,7 +772,9 @@ class EventEmitter {
                 wrapped(...args);
             }
             catch (err) {
-                setTimeout(() => { throw err; }, 0);
+                setTimeout(() => {
+                    throw err;
+                }, 0);
             }
         }
         return true;
@@ -798,7 +815,8 @@ __webpack_require__.r(__webpack_exports__);
 function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
 }
-function noop() { }
+function noop() {
+}
 function fitRectContain(srcW, srcH, dstW, dstH) {
     const srcRatio = srcW / srcH;
     const dstRatio = dstW / dstH;
@@ -840,10 +858,13 @@ function fitRectFill(_srcW, _srcH, dstW, dstH) {
 }
 function selectFit(mode, sw, sh, dw, dh) {
     switch (mode) {
-        case 'cover': return fitRectCover(sw, sh, dw, dh);
-        case 'fill': return fitRectFill(sw, sh, dw, dh);
+        case 'cover':
+            return fitRectCover(sw, sh, dw, dh);
+        case 'fill':
+            return fitRectFill(sw, sh, dw, dh);
         case 'contain':
-        default: return fitRectContain(sw, sh, dw, dh);
+        default:
+            return fitRectContain(sw, sh, dw, dh);
     }
 }
 async function runTasks(tasks, concurrency) {
