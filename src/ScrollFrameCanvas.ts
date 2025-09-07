@@ -81,7 +81,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
 
   private _boundOnScroll: () => void;
 
-  constructor(options: ScrollFrameCanvasOptions) {
+  constructor (options: ScrollFrameCanvasOptions) {
     super();
     if (!options || !options.canvasEle) throw new Error('canvasEle 必填');
     if (!options.scrollbarEle) throw new Error('scrollbarEle 必填');
@@ -148,7 +148,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
   }
 
   /** 启动 */
-  async init(): Promise<this> {
+  async init (): Promise<this> {
     const total = this.getTotalFrames();
     this._preRenderedFrames = new Array(total);
 
@@ -245,7 +245,6 @@ export default class ScrollFrameCanvas extends EventEmitter {
       }
 
 
-
       // 恢复滚动
       this._enableScroll();
 
@@ -262,14 +261,14 @@ export default class ScrollFrameCanvas extends EventEmitter {
   }
 
   /** 开始播放（启用渲染循环） */
-  play(): void {
+  play (): void {
     if (this._playing) return;
     this._playing = true;
     this._tick();
   }
 
   /** 暂停播放 */
-  pause(): void {
+  pause (): void {
     this._playing = false;
     if (this._rAFId) {
       cancelAnimationFrame(this._rAFId);
@@ -278,7 +277,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
   }
 
   /** 停止并重置到 0 帧 */
-  stop(): void {
+  stop (): void {
     this.pause();
     this.setFrame(0);
   }
@@ -286,24 +285,24 @@ export default class ScrollFrameCanvas extends EventEmitter {
   /**
    * 设置当前帧
    */
-  setFrame(frameIndex: number): void {
+  setFrame (frameIndex: number): void {
     const idx = clamp(Math.round(frameIndex), 0, this.getTotalFrames() - 1);
     this._currentFrame = idx;
     this._renderIfNeeded();
   }
 
   /** 获取当前帧索引 */
-  getCurrentFrame(): number {
+  getCurrentFrame (): number {
     return this._currentFrame;
   }
 
   /** 获取总帧数 */
-  getTotalFrames(): number {
+  getTotalFrames (): number {
     return this.total;
   }
 
   /** 销毁并清理资源 */
-  destroy(): void {
+  destroy (): void {
     if (this._destroyed) return;
     this.pause();
     this._detachScroll();
@@ -328,7 +327,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
     this._destroyed = true;
   }
 
-  private _cleanupNullFrames(): void {
+  private _cleanupNullFrames (): void {
     // 移除 null 元素，重新排列数组
     const validFrames: ImageBitmap[] = [];
     const originalLength = this._preRenderedFrames.length;
@@ -354,6 +353,9 @@ export default class ScrollFrameCanvas extends EventEmitter {
     index: number, offscreenCanvas: OffscreenCanvas, offscreenCtx: OffscreenCanvasRenderingContext2D,
     isBack = false,
   ): Promise<void> {
+    if (this._destroyed) {
+      throw new Error('ScrollFrameCanvas 已销毁');
+    }
     try {
       const image = await this._loadFrame(index);
 
@@ -379,7 +381,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
     }
   }
 
-  private async _parseImageData(index: number, offscreenCanvas: OffscreenCanvas, offscreenCtx: OffscreenCanvasRenderingContext2D, image: ImageBitmap | HTMLImageElement): Promise<void> {
+  private async _parseImageData (index: number, offscreenCanvas: OffscreenCanvas, offscreenCtx: OffscreenCanvasRenderingContext2D, image: ImageBitmap | HTMLImageElement): Promise<void> {
     try {
       if (image instanceof ImageBitmap) {
         this._preRenderedFrames[index] = image;
@@ -399,7 +401,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
     }
   }
 
-  private async _loadFrame(index: number): Promise<HTMLImageElement | ImageBitmap | null> {
+  private async _loadFrame (index: number): Promise<HTMLImageElement | ImageBitmap | null> {
     const image = await this._getImage(index);
     if (image === null) {
       return null;
@@ -410,7 +412,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
     return image;
   }
 
-  private async _getImage(index: number): Promise<HTMLImageElement | ImageBitmap | string | null> {
+  private async _getImage (index: number): Promise<HTMLImageElement | ImageBitmap | string | null> {
     if (this.images) {
       if (this.images[index] === undefined) {
         throw new Error(`images 数组索引 ${index} 对应的图片为 undefined`);
@@ -429,7 +431,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
     return result;
   }
 
-  private _loadImageFromURL(url: string): Promise<HTMLImageElement> {
+  private _loadImageFromURL (url: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
@@ -439,7 +441,8 @@ export default class ScrollFrameCanvas extends EventEmitter {
     });
   }
 
-  private _drawImageToOffscreen(img: HTMLImageElement | ImageBitmap, ctx: OffscreenCanvasRenderingContext2D, canvasW: number, canvasH: number): void {
+  private _drawImageToOffscreen (img: HTMLImageElement | ImageBitmap, ctx: OffscreenCanvasRenderingContext2D, canvasW: number, canvasH: number): void {
+    if (this._destroyed) return;
     const natW = (img as HTMLImageElement).naturalWidth || img.width || 1;
     const natH = (img as HTMLImageElement).naturalHeight || img.height || 1;
 
@@ -448,7 +451,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
     ctx.drawImage(img, 0, 0, natW, natH, Math.round(fit.x), Math.round(fit.y), Math.round(fit.w), Math.round(fit.h));
   }
 
-  private _disableScroll(): void {
+  private _disableScroll (): void {
     const el = this.scrollbarEle;
     if (el === window || el === document || el === document.body) {
       // 保存原始滚动行为
@@ -474,7 +477,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
     }
   }
 
-  private _enableScroll(): void {
+  private _enableScroll (): void {
     const el = this.scrollbarEle;
     if (el === window || el === document || el === document.body) {
       // 恢复原始滚动行为
@@ -489,7 +492,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
     }
   }
 
-  private _attachScroll(): void {
+  private _attachScroll (): void {
     const el = this.scrollbarEle;
     if (!el) return;
     const opts = { passive: true };
@@ -502,7 +505,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
     }
   }
 
-  private _detachScroll(): void {
+  private _detachScroll (): void {
     const el = this.scrollbarEle;
     if (!el) return;
     if (el === window || el === document) {
@@ -515,7 +518,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
   }
 
 
-  private _getScrollPixels(): { scrollPixels: number; totalScrollPixels: number } {
+  private _getScrollPixels (): { scrollPixels: number; totalScrollPixels: number } {
     const el = this.scrollbarEle;
     const axis = this.options.scrollAxis;
 
@@ -541,13 +544,13 @@ export default class ScrollFrameCanvas extends EventEmitter {
     }
   }
 
-  private _handleScroll(): void {
+  private _handleScroll (): void {
     if (!this._playing) return;
     // 只更新帧索引，不直接绘制
     this._currentFrame = this._calcFrameFromScroll();
   }
 
-  private _tick(): void {
+  private _tick (): void {
     if (!this._playing) return;
     this._rAFId = requestAnimationFrame(() => {
       // 检查当前帧是否需要绘制
@@ -569,7 +572,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
     });
   }
 
-  private _calcFrameFromScroll(): number {
+  private _calcFrameFromScroll (): number {
     const total = this.getTotalFrames();
     const { scrollPixels, totalScrollPixels } = this._getScrollPixels();
     const frameIndex = this.options.frameMapper(scrollPixels, totalScrollPixels, total);
@@ -577,6 +580,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
   }
 
   private _renderIfNeeded (force: boolean = false, usePrevRealFrame = false) {
+    if (this._destroyed) return;
     const frame = this._currentFrame;
     if (!force) {
       if (frame === this._lastDrawnFrame) {
@@ -628,6 +632,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
   }
 
   private _drawPreRenderedFrame (preRenderedFrame: ImageBitmap): void {
+    if (this._destroyed) return;
     if (!this.ctx) return;
 
     const ctx = this.ctx;
@@ -638,7 +643,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
     ctx.drawImage(preRenderedFrame, 0, 0, canvasW, canvasH);
   }
 
-  private _startLoadingAnimation() {
+  private _startLoadingAnimation () {
     this._loadingProgress = 0;
     this._loadingProgressCount = 0;
     this._loadingCompleted = false;
@@ -647,11 +652,12 @@ export default class ScrollFrameCanvas extends EventEmitter {
   private _stopLoadingAnimation (): void {
     this._loadingCompleted = true;
     cancelAnimationFrame(this._loadingAnimationId);
-      this._loadingAnimationId = 0;
-      // 清空画布
-      if (this.ctx) {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-      }
+    this._loadingAnimationId = 0;
+    if (this._destroyed) return;
+    // 清空画布
+    if (this.ctx) {
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
   }
 
   private _updateLoadingProgress (): void {
@@ -667,7 +673,8 @@ export default class ScrollFrameCanvas extends EventEmitter {
     this._loadingAnimationId = requestAnimationFrame(animate);
   }
 
-  private _drawLoadingAnimation(): void {
+  private _drawLoadingAnimation (): void {
+    if (this._destroyed) return;
     if (this._loadingCompleted) return;
     if (!this.ctx) return;
 
@@ -760,6 +767,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
   }
 
   private _drawBackgroundLoadingAnimation (): void {
+    if (this._destroyed) return;
     if (this._backgroundLoadingCompleted || !this.ctx) return;
     if (!this.options.large?.showBackgroundProgress) return;
     this._renderIfNeeded(true, true);

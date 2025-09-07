@@ -1,10 +1,11 @@
-export function clamp(value: number, min: number, max: number): number {
+export function clamp (value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
 
-export function noop(): void {}
+export function noop (): void {
+}
 
-export function fitRectContain(srcW: number, srcH: number, dstW: number, dstH: number) {
+export function fitRectContain (srcW: number, srcH: number, dstW: number, dstH: number) {
   const srcRatio = srcW / srcH;
   const dstRatio = dstW / dstH;
   if (srcRatio > dstRatio) {
@@ -22,7 +23,7 @@ export function fitRectContain(srcW: number, srcH: number, dstW: number, dstH: n
   }
 }
 
-export function fitRectCover(srcW: number, srcH: number, dstW: number, dstH: number) {
+export function fitRectCover (srcW: number, srcH: number, dstW: number, dstH: number) {
   const srcRatio = srcW / srcH;
   const dstRatio = dstW / dstH;
   if (srcRatio < dstRatio) {
@@ -40,60 +41,63 @@ export function fitRectCover(srcW: number, srcH: number, dstW: number, dstH: num
   }
 }
 
-export function fitRectFill(_srcW: number, _srcH: number, dstW: number, dstH: number) {
+export function fitRectFill (_srcW: number, _srcH: number, dstW: number, dstH: number) {
   return { x: 0, y: 0, w: dstW, h: dstH };
 }
 
-export function selectFit(mode: 'contain' | 'cover' | 'fill', sw: number, sh: number, dw: number, dh: number) {
+export function selectFit (mode: 'contain' | 'cover' | 'fill', sw: number, sh: number, dw: number, dh: number) {
   switch (mode) {
-    case 'cover': return fitRectCover(sw, sh, dw, dh);
-    case 'fill': return fitRectFill(sw, sh, dw, dh);
+    case 'cover':
+      return fitRectCover(sw, sh, dw, dh);
+    case 'fill':
+      return fitRectFill(sw, sh, dw, dh);
     case 'contain':
-    default: return fitRectContain(sw, sh, dw, dh);
+    default:
+      return fitRectContain(sw, sh, dw, dh);
   }
 }
 
 
-export async function runTasks<T>(tasks: Array<() => Promise<T>>, concurrency: number): Promise<Array<T>> {
+export async function runTasks<T> (tasks: Array<() => Promise<T>>, concurrency: number): Promise<Array<T>> {
   const taskCount = tasks.length;
   if (taskCount === 0) {
-      return [];
+    return [];
   }
 
   concurrency = Math.max(1, Math.floor(concurrency || 1));
   concurrency = Math.min(concurrency, taskCount);
 
-  const list: Array<[() => Promise<T>, number]> = tasks.map((v, idx) => [v,idx]);
+  const list: Array<[() => Promise<T>, number]> = tasks.map((v, idx) => [v, idx]);
 
   const queue: Array<Promise<number>> = [];
   const results: Array<T> = [];
 
   const next = async (task: () => Promise<T>, slotIdx: number, taskIdx: number) => {
-      const result = await task();
-      results[taskIdx] = result;
-      return slotIdx;
-  }
+    const result = await task();
+    results[taskIdx] = result;
+    return slotIdx;
+  };
 
   while (list.length > 0) {
-      if (queue.length) {
-          const slotIdx = await Promise.race<number>(queue);
-          const [fn, taskIdx] = list.shift();
-          queue[slotIdx] = next(fn, slotIdx, taskIdx);
-          continue;
-      }
-      queue.push(
-          ...list.splice(0, concurrency)
-              .map(([fn, taskIdx], slotIdx: number) => {
-                  return next(fn, slotIdx, taskIdx);
-              })
-      );
+    if (queue.length) {
+      const slotIdx = await Promise.race<number>(queue);
+      const [fn, taskIdx] = list.shift();
+      queue[slotIdx] = next(fn, slotIdx, taskIdx);
+      continue;
+    }
+    queue.push(
+      ...list.splice(0, concurrency)
+        .map(([fn, taskIdx], slotIdx: number) => {
+          return next(fn, slotIdx, taskIdx);
+        }),
+    );
   }
   await Promise.all(queue);
 
   return results;
 }
 
-export function deepMerge <T> (obj: T, obj2: T): T {
+export function deepMerge<T> (obj: T, obj2: T): T {
   // 如果 obj2 是 null 或 undefined，返回 obj 的副本
   if (obj2 === null) {
     return obj ? JSON.parse(JSON.stringify(obj)) : obj2;
@@ -133,7 +137,7 @@ export function deepMerge <T> (obj: T, obj2: T): T {
   for (const key in obj2) {
     if (obj2.hasOwnProperty(key)) {
       if (typeof obj2[key] === 'object' && obj2[key] !== null && !Array.isArray(obj2[key]) &&
-          typeof result[key] === 'object' && result[key] !== null && !Array.isArray(result[key])) {
+        typeof result[key] === 'object' && result[key] !== null && !Array.isArray(result[key])) {
         // 如果两个值都是对象，递归合并
         result[key] = deepMerge(result[key], obj2[key]);
       } else {

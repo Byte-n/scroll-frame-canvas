@@ -7,7 +7,7 @@ let scrollHint: HTMLElement | null = null;
 let hintShown = false;
 
 // 显示滚动提示
-function showScrollHint(): void {
+function showScrollHint (): void {
   if (scrollHint && !hintShown) {
     scrollHint.style.opacity = '1';
     hintShown = true;
@@ -15,7 +15,7 @@ function showScrollHint(): void {
 }
 
 // 隐藏滚动提示
-function hideScrollHint(): void {
+function hideScrollHint (): void {
   if (scrollHint && hintShown) {
     scrollHint.style.opacity = '0';
     hintShown = false;
@@ -35,7 +35,7 @@ async function initScrollFrameCanvas (): Promise<void> {
     const imageFactory = async (index: number) => {
       if (currentFrameRatio !== 0) {
         if (index % currentFrameRatio !== 0) {
-        return null;
+          return null;
         }
       }
       return `${base}${String(index + 1).padStart(3, '0')}.jpg`;
@@ -63,11 +63,11 @@ async function initScrollFrameCanvas (): Promise<void> {
       },
       frameMapper: (scrollPixels: number) => {
         // console.log('totalFrames:', totalFrames);
-      return Math.round(scrollPixels / (9 * Math.max(1, currentFrameRatio)));
+        return Math.round(scrollPixels / (9 * Math.max(1, currentFrameRatio)));
       },
     });
 
-   const beginSecond = Date.now() / 1000;
+    const beginSecond = Date.now() / 1000;
     await scrollFrameCanvas.init();
     const endSecond = Date.now() / 1000;
     console.log('初始化完成，耗时:', endSecond - beginSecond, '秒');
@@ -84,22 +84,22 @@ async function rerender (): Promise<void> {
   const rerenderBtn = document.getElementById('rerenderBtn') as HTMLButtonElement;
 
 
-      try {
-      // 禁用按钮
-      rerenderBtn.disabled = true;
-      rerenderBtn.textContent = '渲染中...';
+  try {
+    // 禁用按钮
+    rerenderBtn.disabled = true;
+    rerenderBtn.textContent = '渲染中...';
 
-      // 隐藏提示
-      hideScrollHint();
+    // 隐藏提示
+    hideScrollHint();
 
-      // 销毁当前实例
-      if (scrollFrameCanvas) {
-        scrollFrameCanvas.destroy();
-        scrollFrameCanvas = null;
-      }
+    // 销毁当前实例
+    if (scrollFrameCanvas) {
+      scrollFrameCanvas.destroy();
+      scrollFrameCanvas = null;
+    }
 
-      // 重新初始化
-      await initScrollFrameCanvas();
+    // 重新初始化
+    await initScrollFrameCanvas();
 
   } catch (error) {
     console.error('重新渲染失败:', error);

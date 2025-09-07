@@ -17,7 +17,7 @@ export class EventEmitter {
   /**
    * 监听事件
    */
-  on(event: string, listener: Function, options: EventOptions = {}): this {
+  on (event: string, listener: Function, options: EventOptions = {}): this {
     const priority = Number.isFinite(options.priority) ? options.priority! : 0;
     const debounceMs = Number.isFinite(options.debounceMs) ? options.debounceMs! : 0;
     let wrapped = listener;
@@ -34,7 +34,7 @@ export class EventEmitter {
   /**
    * 取消事件
    */
-  off(event: string, listener: Function): this {
+  off (event: string, listener: Function): this {
     const arr = this._listeners.get(event);
     if (!arr) return this;
     const idx = arr.findIndex((l) => l.fn === listener);
@@ -48,14 +48,16 @@ export class EventEmitter {
   /**
    * 触发事件
    */
-  emit(event: string, ...args: any[]): boolean {
+  emit (event: string, ...args: any[]): boolean {
     const arr = this._listeners.get(event);
     if (!arr || arr.length === 0) return false;
     for (const { wrapped } of arr) {
-      try { 
-        wrapped(...args); 
-      } catch (err) { 
-        setTimeout(() => { throw err; }, 0); 
+      try {
+        wrapped(...args);
+      } catch (err) {
+        setTimeout(() => {
+          throw err;
+        }, 0);
       }
     }
     return true;
@@ -65,7 +67,7 @@ export class EventEmitter {
 /**
  * 简易防抖
  */
-export function debounce<T extends Function>(fn: T, wait: number): T {
+export function debounce<T extends Function> (fn: T, wait: number): T {
   let t: NodeJS.Timeout | null = null;
   return ((...args: any[]) => {
     if (t) clearTimeout(t);
