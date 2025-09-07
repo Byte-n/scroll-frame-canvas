@@ -1,5 +1,5 @@
 import { EventEmitter } from './events';
-import { clamp, deepMerge, noop, runTasks, selectFit } from './utils';
+import { clamp, deepMerge, noop, runTasks, selectFit, drawExitAnimation } from './utils';
 
 export interface ScrollFrameCanvasOptions {
   canvasEle: HTMLCanvasElement;
@@ -39,6 +39,7 @@ export interface ScrollFrameCanvasOptions {
   frameMapper: (scrollPixels: number, totalScrollPixels: number, totalFrames: number) => number;
   resetScrollOnInit?: boolean;
   maxConcurrentLoads?: number;
+  exitAnimationFrameRate?: number;
 }
 
 /**
@@ -90,6 +91,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
       scaleMode: 'contain',
       resetScrollOnInit: true,
       maxConcurrentLoads: 6,
+      exitAnimationFrameRate: 75,
       onFrame: noop,
       onComplete: noop,
       onError: noop,
@@ -205,6 +207,9 @@ export default class ScrollFrameCanvas extends EventEmitter {
           }),
           this.options.maxConcurrentLoads!,
         );
+
+        await this._stopLoadingAnimation();
+
         this.totalProgress = this.total;
         Promise.resolve()
           .then(async () => {
@@ -242,8 +247,8 @@ export default class ScrollFrameCanvas extends EventEmitter {
         );
         // 移除 null 元素并更新 total
         this._cleanupNullFrames();
+        await this._stopLoadingAnimation();
       }
-
 
       // 恢复滚动
       this._enableScroll();
@@ -254,9 +259,8 @@ export default class ScrollFrameCanvas extends EventEmitter {
     } catch (error) {
       // 出错时也要停止动画并恢复滚动
       this._enableScroll();
+      await this._stopLoadingAnimation();
       throw error;
-    } finally {
-      this._stopLoadingAnimation();
     }
   }
 
@@ -364,7 +368,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
         this._preRenderedFrames[index] = null as any; // 标记为 null
         if (!isBack) {
           this.totalProgress--;
-          this._updateLoadingProgress();
+          this._updateLoadingProgress(0);
         }
         return;
       }
@@ -579,7 +583,7 @@ export default class ScrollFrameCanvas extends EventEmitter {
     return clamp(Math.round(frameIndex), 0, total - 1);
   }
 
-  private _renderIfNeeded (force: boolean = false, usePrevRealFrame = false) {
+  private _renderIfNeeded (force: boolean = false, usePrevRealFrame = false, event = true) {
     if (this._destroyed) return;
     const frame = this._currentFrame;
     if (!force) {
@@ -617,9 +621,11 @@ export default class ScrollFrameCanvas extends EventEmitter {
       this._lastDrawnFrame = frame;
       this._lastRealDrawFrame = realFrame;
 
-      const { scrollPixels, totalScrollPixels } = this._getScrollPixels();
-      const offset = totalScrollPixels > 0 ? scrollPixels / totalScrollPixels : 0;
-      this.emit('frame', frame, offset);
+      if (event) {
+        const { scrollPixels, totalScrollPixels } = this._getScrollPixels();
+        const offset = totalScrollPixels > 0 ? scrollPixels / totalScrollPixels : 0;
+        this.emit('frame', frame, offset);
+      }
 
       if (frame === this.getTotalFrames() - 1) {
         this.emit('complete');
@@ -649,19 +655,27 @@ export default class ScrollFrameCanvas extends EventEmitter {
     this._loadingCompleted = false;
   }
 
-  private _stopLoadingAnimation (): void {
+  private _stopLoadingAnimation (): Promise<void> {
+    this._drawLoadingAnimation();
+
     this._loadingCompleted = true;
     cancelAnimationFrame(this._loadingAnimationId);
     this._loadingAnimationId = 0;
-    if (this._destroyed) return;
-    // 清空画布
-    if (this.ctx) {
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    }
+    if (this._destroyed) return Promise.resolve();
+
+    this._currentFrame = 0;
+    return drawExitAnimation({
+      ctx: this.ctx, canvas: this.canvas,
+      totalFrame: this.options.exitAnimationFrameRate!,
+      exitDirection: 'top',
+      drawBackground: () => {
+        this._renderIfNeeded(true, false, false)
+      }
+    })
   }
 
-  private _updateLoadingProgress (): void {
-    this._loadingProgressCount++;
+  private _updateLoadingProgress (incr = 1): void {
+    this._loadingProgressCount += incr;
     this._loadingProgress = Math.min(1, Math.max(0, this._loadingProgressCount / this.totalProgress));
 
     const animate = () => {

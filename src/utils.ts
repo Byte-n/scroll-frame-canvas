@@ -149,3 +149,47 @@ export function deepMerge<T> (obj: T, obj2: T): T {
 
   return result;
 }
+
+export function easeOutQuad (t: number): number {
+  const tt = clamp(t, 0, 1);
+  return 1 - (1 - tt) * (1 - tt);
+}
+
+export function drawExitAnimation (config: {
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  drawBackground: () => void,
+  totalFrame: number;
+  exitDirection: 'top' | 'bottom'
+}) {
+  const { ctx, canvas, drawBackground, totalFrame, exitDirection } = config;
+  const ofc = new OffscreenCanvas(canvas.width, canvas.height);
+  const opcCtx = ofc.getContext('2d');
+  opcCtx.drawImage(canvas, 0, 0);
+
+  return new Promise<void>((resolve) => {
+
+    let frame = 0;
+    const drawExit = () => {
+      if (frame === totalFrame) {
+        ctx.globalAlpha = 1;
+        return resolve();
+      }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.globalAlpha = 1;
+      drawBackground();
+
+      const t = frame / totalFrame;
+      const eased = easeOutQuad(t);
+
+      ctx.globalAlpha = 1 - eased;
+      ctx.drawImage(ofc, 0, exitDirection === 'top' ? -canvas.height * eased : canvas.height * eased);
+
+      frame++;
+      requestAnimationFrame(drawExit);
+    };
+
+    requestAnimationFrame(drawExit);
+  });
+}

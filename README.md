@@ -17,7 +17,7 @@
 - 自定义加载动画：主加载与背景层加载均可自定义绘制
 - 并发控制与重试：`maxConcurrentLoads` 
 
-文档：https://byte-n.github.io/scroll-frame-canvas/
+文档 & Demo：https://byte-n.github.io/scroll-frame-canvas/
 
 ---
 

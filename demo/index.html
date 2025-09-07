@@ -165,6 +165,106 @@ const player = new ScrollFrameCanvas({
 player.init().then(() => player.play());</code></pre>
         </div>
 
+        <!-- ScrollFrameCanvas 初始化参数说明 -->
+        <div style="background: #f8f9fa; padding: 40px; border-radius: 12px; margin-bottom: 40px;">
+          <h3 style="color: #2a2a2a; margin-bottom: 30px; font-size: 28px; text-align: center;">
+            📋 ScrollFrameCanvas 初始化参数说明
+          </h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px;">
+            <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+              <h4 style="color: #007acc; margin-bottom: 15px; font-size: 18px; font-weight: 600;">基础配置</h4>
+              <div style="font-size: 14px; line-height: 1.6; color: #333;">
+                <div style="margin-bottom: 8px;"><strong>canvasEle:</strong> HTMLCanvasElement - Canvas 元素（必填）</div>
+                <div style="margin-bottom: 8px;"><strong>scrollbarEle:</strong> HTMLElement | Window | Document - 滚动容器（必填）</div>
+                <div style="margin-bottom: 8px;"><strong>scrollAxis:</strong> 'x' | 'y' - 滚动轴方向（必填）</div>
+                <div style="margin-bottom: 8px;"><strong>frameMapper:</strong> Function - 滚动像素到帧索引的映射函数（必填）</div>
+              </div>
+            </div>
+            <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+              <h4 style="color: #007acc; margin-bottom: 15px; font-size: 18px; font-weight: 600;">数据源配置</h4>
+              <div style="font-size: 14px; line-height: 1.6; color: #333;">
+                <div style="margin-bottom: 8px;"><strong>images:</strong> Array&lt;HTMLImageElement | ImageBitmap | string&gt; - 图片数组</div>
+                <div style="margin-bottom: 8px;"><strong>total:</strong> number - 总帧数</div>
+                <div style="margin-bottom: 8px;"><strong>imageFactory:</strong> Function - 异步图片工厂函数</div>
+                <div style="margin-bottom: 8px;"><strong>maxConcurrentLoads:</strong> number - 最大并发加载数（默认: 6）</div>
+              </div>
+            </div>
+            <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+              <h4 style="color: #007acc; margin-bottom: 15px; font-size: 18px; font-weight: 600;">渲染配置</h4>
+              <div style="font-size: 14px; line-height: 1.6; color: #333;">
+                <div style="margin-bottom: 8px;"><strong>scaleMode:</strong> 'contain' | 'cover' | 'fill' - 缩放模式（默认: 'contain'）</div>
+                <div style="margin-bottom: 8px;"><strong>resetScrollOnInit:</strong> boolean - 初始化时重置滚动位置（默认: true）</div>
+                <div style="margin-bottom: 8px;"><strong>exitAnimationFrameRate:</strong> number - 退出动画帧率（默认: 75）</div>
+              </div>
+            </div>
+            <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+              <h4 style="color: #007acc; margin-bottom: 15px; font-size: 18px; font-weight: 600;">性能优化</h4>
+              <div style="font-size: 14px; line-height: 1.6; color: #333;">
+                <div style="margin-bottom: 8px;"><strong>large.enabled:</strong> boolean - 启用分层加载（默认: true）</div>
+                <div style="margin-bottom: 8px;"><strong>large.factor:</strong> number - 分层因子，必须是2的幂次方（默认: 4）</div>
+                <div style="margin-bottom: 8px;"><strong>large.showBackgroundProgress:</strong> boolean - 显示后台加载进度（默认: true）</div>
+              </div>
+            </div>
+            <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+              <h4 style="color: #007acc; margin-bottom: 15px; font-size: 18px; font-weight: 600;">事件回调</h4>
+              <div style="font-size: 14px; line-height: 1.6; color: #333;">
+                <div style="margin-bottom: 8px;"><strong>onFrame:</strong> (frame: number, offset: number) => void - 帧更新回调</div>
+                <div style="margin-bottom: 8px;"><strong>onComplete:</strong> () => void - 动画完成回调</div>
+                <div style="margin-bottom: 8px;"><strong>onInitComplete:</strong> () => void - 初始化完成回调</div>
+                <div style="margin-bottom: 8px;"><strong>onError:</strong> (error: Error) => void - 错误回调</div>
+              </div>
+            </div>
+            <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+              <h4 style="color: #007acc; margin-bottom: 15px; font-size: 18px; font-weight: 600;">自定义渲染</h4>
+              <div style="font-size: 14px; line-height: 1.6; color: #333;">
+                <div style="margin-bottom: 8px;"><strong>customMainLoading:</strong> Function - 自定义主加载动画</div>
+                <div style="margin-bottom: 8px;"><strong>customBackgroundLoading:</strong> Function - 自定义后台加载动画</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ScrollFrameCanvas 事件、实例函数说明 -->
+        <div style="background: #f8f9fa; padding: 40px; border-radius: 12px; margin-bottom: 40px;">
+          <h3 style="color: #2a2a2a; margin-bottom: 30px; font-size: 28px; text-align: center;">
+            🔧 ScrollFrameCanvas 事件、实例函数说明
+          </h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px;">
+            <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+              <h4 style="color: #28a745; margin-bottom: 15px; font-size: 18px; font-weight: 600;">生命周期方法</h4>
+              <div style="font-size: 14px; line-height: 1.6; color: #333;">
+                <div style="margin-bottom: 8px;"><strong>init():</strong> Promise&lt;this&gt; - 初始化并预加载所有帧</div>
+                <div style="margin-bottom: 8px;"><strong>destroy():</strong> void - 销毁实例并清理资源</div>
+              </div>
+            </div>
+            <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+              <h4 style="color: #28a745; margin-bottom: 15px; font-size: 18px; font-weight: 600;">播放控制</h4>
+              <div style="font-size: 14px; line-height: 1.6; color: #333;">
+                <div style="margin-bottom: 8px;"><strong>play():</strong> void - 开始播放动画</div>
+                <div style="margin-bottom: 8px;"><strong>pause():</strong> void - 暂停播放</div>
+                <div style="margin-bottom: 8px;"><strong>stop():</strong> void - 停止并重置到第0帧</div>
+              </div>
+            </div>
+            <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+              <h4 style="color: #28a745; margin-bottom: 15px; font-size: 18px; font-weight: 600;">帧控制</h4>
+              <div style="font-size: 14px; line-height: 1.6; color: #333;">
+                <div style="margin-bottom: 8px;"><strong>setFrame(frameIndex: number):</strong> void - 设置当前帧</div>
+                <div style="margin-bottom: 8px;"><strong>getCurrentFrame():</strong> number - 获取当前帧索引</div>
+                <div style="margin-bottom: 8px;"><strong>getTotalFrames():</strong> number - 获取总帧数</div>
+              </div>
+            </div>
+            <div style="background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+              <h4 style="color: #28a745; margin-bottom: 15px; font-size: 18px; font-weight: 600;">事件系统</h4>
+              <div style="font-size: 14px; line-height: 1.6; color: #333;">
+                <div style="margin-bottom: 8px;"><strong>on('frame', callback):</strong> 监听帧更新事件</div>
+                <div style="margin-bottom: 8px;"><strong>on('complete', callback):</strong> 监听动画完成事件</div>
+                <div style="margin-bottom: 8px;"><strong>on('initComplete', callback):</strong> 监听初始化完成事件</div>
+                <div style="margin-bottom: 8px;"><strong>on('error', callback):</strong> 监听错误事件</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div style="text-align: center;">
           <h3 style="color: #2a2a2a; margin-bottom: 20px; font-size: 24px;">
             适用场景

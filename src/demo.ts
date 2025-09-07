@@ -2,7 +2,7 @@ import ScrollFrameCanvas from './ScrollFrameCanvas';
 
 // 全局变量
 let scrollFrameCanvas: ScrollFrameCanvas | null = null;
-let currentFrameRatio = 0;
+let currentFrameRatio = 3;
 let scrollHint: HTMLElement | null = null;
 let hintShown = false;
 
