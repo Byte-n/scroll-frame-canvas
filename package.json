@@ -6,6 +6,14 @@
   "main": "dist/scroll-frame-canvas.umd.js",
   "module": "dist/scroll-frame-canvas.esm.js",
   "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Byte-n/scroll-frame-canvas.git"
+  },
+  "homepage": "https://byte-n.github.io/scroll-frame-canvas/",
+  "bugs": {
+    "url": "https://github.com/Byte-n/scroll-frame-canvas/issues"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
